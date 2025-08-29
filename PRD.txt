@@ -1,0 +1,380 @@
+# Chat & Video Call App - Product Requirements Document
+
+## 1. Product Overview
+
+### 1.1 Product Vision
+A real-time chat and video calling application built with Next.js 15 full-stack architecture that enables users to connect, communicate, and build relationships through seamless messaging and video interactions across all devices.
+
+### 1.2 Product Goals
+- Create an intuitive and responsive communication platform using Next.js 15
+- Enable real-time messaging and video calling between friends
+- Provide seamless friend discovery and management system
+- Deliver consistent experience across desktop, tablet, and mobile devices
+- Maintain high performance with React 19 and latest Next.js features
+
+### 1.3 Target Audience
+- Primary: Young adults (18-35) seeking casual communication tools
+- Secondary: Remote workers and teams needing informal communication
+- Tertiary: Anyone looking for a simple, reliable video calling solution
+
+## 2. Technical Stack
+
+### 2.1 Full-Stack Framework
+- **Next.js 15** - Latest full-stack React framework with App Router
+- **React 19** - Latest React with improved server components
+- **Tailwind CSS 4.1** - Latest styling framework
+- **shadcn/ui** - Modern UI component library
+- **Sonner** - Modern toast notifications
+
+### 2.2 Database & Backend
+- **MongoDB** - Primary database with Mongoose ODM
+- **Next.js 15 API Routes** - Backend API endpoints in `/app/api` folder
+- **NextAuth.js v5** - Latest authentication with Google OAuth
+- **Socket.io** - Real-time communication
+- **WebRTC** - Video/audio calling functionality
+
+### 2.3 Data Fetching Strategy
+- **Server Components** - Use `fetch()` to call internal API routes
+- **Client Components** - Use `fetch()` for dynamic interactions
+- **API Routes** - Handle all database operations and business logic
+
+## 3. Core Features
+
+### 3.1 Authentication System
+**Feature**: NextAuth.js v5 with Google OAuth
+- **Description**: Users can sign in using their Google accounts
+- **Implementation**:
+  - Google OAuth 2.0 integration
+  - Automatic user profile creation on first login
+  - Session management with JWT tokens
+  - Protected routes and API endpoints
+
+### 3.2 Friend Management System
+**Feature**: Friend Discovery and Management
+- **Description**: Users can find, add, and manage friends through email-based search and requests
+- **API Endpoints**:
+  - `POST /api/friends/search` - Search users by email
+  - `POST /api/friends` - Send friend request
+  - `GET /api/friends/requests` - Get pending requests
+  - `PUT /api/friends/requests/[id]` - Accept/decline request
+  - `GET /api/friends` - Get friends list
+  - `DELETE /api/friends/[id]` - Remove friend
+
+### 3.3 Real-time Chat System
+**Feature**: Text Messaging with Server Components
+- **Description**: Real-time text messaging with server-side data fetching
+- **API Endpoints**:
+  - `GET /api/messages/[chatId]` - Get chat history
+  - `POST /api/messages` - Send message
+  - `PUT /api/messages/[id]/read` - Mark as read
+  - `DELETE /api/messages/[id]` - Delete message
+
+### 3.4 Video Calling System
+**Feature**: WebRTC Video Calls
+- **Description**: Peer-to-peer video calling with Socket.io signaling
+- **API Endpoints**:
+  - `POST /api/calls/initiate` - Start video call
+  - `POST /api/calls/[id]/answer` - Answer call
+  - `POST /api/calls/[id]/decline` - Decline call
+  - `POST /api/calls/[id]/end` - End call
+
+### 3.5 Online Status & Presence
+**Feature**: Real-time Presence System
+- **Description**: Show which friends are currently online and active
+- **API Endpoints**:
+  - `GET /api/users/online` - Get online friends
+  - `PUT /api/users/status` - Update user status
+
+## 4. Project Structure
+
+```
+chat-video-app/
+├── app/
+│   ├── (auth)/                       # Auth route group
+│   │   ├── login/
+│   │   │   └── page.jsx             # Login page
+│   │   └── layout.jsx               # Auth layout
+│   ├── (dashboard)/                 # Dashboard route group  
+│   │   ├── dashboard/
+│   │   │   └── page.jsx             # Dashboard (server component)
+│   │   ├── chat/
+│   │   │   ├── [friendId]/
+│   │   │   │   └── page.jsx         # Chat page (server component)
+│   │   │   └── page.jsx             # Chat list
+│   │   ├── friends/
+│   │   │   └── page.jsx             # Friends page (server component)
+│   │   ├── settings/
+│   │   │   └── page.jsx             # Settings page
+│   │   └── layout.jsx               # Dashboard layout
+│   ├── api/                         # Backend API Routes
+│   │   ├── auth/
+│   │   │   └── [...nextauth]/
+│   │   │       └── route.js         # NextAuth v5 configuration
+│   │   ├── friends/
+│   │   │   ├── route.js             # GET, POST /api/friends
+│   │   │   ├── search/
+│   │   │   │   └── route.js         # POST /api/friends/search
+│   │   │   ├── requests/
+│   │   │   │   ├── route.js         # GET /api/friends/requests
+│   │   │   │   └── [id]/
+│   │   │   │       └── route.js     # PUT /api/friends/requests/[id]
+│   │   │   └── [id]/
+│   │   │       └── route.js         # DELETE /api/friends/[id]
+│   │   ├── messages/
+│   │   │   ├── route.js             # POST /api/messages
+│   │   │   ├── [chatId]/
+│   │   │   │   └── route.js         # GET /api/messages/[chatId]
+│   │   │   ├── recent/
+│   │   │   │   └── route.js         # GET /api/messages/recent
+│   │   │   └── [id]/
+│   │   │       ├── route.js         # DELETE /api/messages/[id]
+│   │   │       └── read/
+│   │   │           └── route.js     # PUT /api/messages/[id]/read
+│   │   ├── users/
+│   │   │   ├── profile/
+│   │   │   │   └── route.js         # GET, PUT /api/users/profile
+│   │   │   ├── online/
+│   │   │   │   └── route.js         # GET /api/users/online
+│   │   │   └── [id]/
+│   │   │       └── route.js         # GET /api/users/[id]
+│   │   └── calls/
+│   │       ├── initiate/
+│   │       │   └── route.js         # POST /api/calls/initiate
+│   │       └── [id]/
+│   │           ├── answer/
+│   │           │   └── route.js     # POST /api/calls/[id]/answer
+│   │           ├── decline/
+│   │           │   └── route.js     # POST /api/calls/[id]/decline
+│   │           └── end/
+│   │               └── route.js     # POST /api/calls/[id]/end
+│   ├── globals.css
+│   ├── layout.jsx                   # Root layout
+│   ├── page.jsx                     # Home page
+│   ├── loading.jsx                  # Global loading UI
+│   └── not-found.jsx               # 404 page
+├── components/
+│   ├── ui/                          # shadcn/ui components
+│   ├── auth/                        # Authentication components
+│   ├── chat/                        # Chat components
+│   ├── friends/                     # Friend management components
+│   ├── video/                       # Video call components
+│   └── layout/                      # Layout components
+├── lib/
+│   ├── auth.js                      # NextAuth v5 configuration
+│   ├── mongodb.js                   # MongoDB connection
+│   ├── utils.js                     # Utility functions
+│   └── socket.js                    # Socket.io client
+├── models/                          # MongoDB models
+│   ├── User.js
+│   ├── Friendship.js
+│   ├── Message.js
+│   └── Call.js
+├── hooks/                           # Custom React hooks
+│   ├── useSocket.js
+│   ├── useAuth.js
+│   ├── useWebRTC.js
+│   └── useChat.js
+├── services/                        # API service functions
+│   ├── friends.js
+│   ├── messages.js
+│   ├── users.js
+│   └── calls.js
+└── package.json
+```
+
+## 5. Database Schema (MongoDB)
+
+### 5.1 User Model
+```javascript
+{
+  _id: ObjectId,
+  googleId: String,
+  email: String,
+  name: String,
+  profilePicture: String,
+  isOnline: Boolean,
+  lastSeen: Date,
+  socketId: String,
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+### 5.2 Friendship Model
+```javascript
+{
+  _id: ObjectId,
+  requester: ObjectId, // User who sent request
+  recipient: ObjectId, // User who received request
+  status: String, // 'pending', 'accepted', 'declined', 'blocked'
+  requestMessage: String,
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+### 5.3 Message Model
+```javascript
+{
+  _id: ObjectId,
+  chatId: String, // Combination of user IDs
+  sender: ObjectId,
+  recipient: ObjectId,
+  message: String,
+  messageType: String, // 'text', 'image', 'file', 'emoji'
+  isRead: Boolean,
+  readAt: Date,
+  isDeleted: Boolean,
+  editedAt: Date,
+  createdAt: Date
+}
+```
+
+### 5.4 Call Model
+```javascript
+{
+  _id: ObjectId,
+  caller: ObjectId,
+  recipient: ObjectId,
+  callType: String, // 'video', 'audio'
+  status: String, // 'initiated', 'ringing', 'answered', 'ended', 'declined'
+  startTime: Date,
+  endTime: Date,
+  duration: Number,
+  createdAt: Date
+}
+```
+
+## 6. API Architecture
+
+### 6.1 Server Components Data Fetching Pattern
+- **Friends Page**: `fetch('/api/friends')` and `fetch('/api/friends/requests')`
+- **Chat Page**: `fetch('/api/messages/[chatId]')` and `fetch('/api/users/[id]')`
+- **Dashboard**: `fetch('/api/messages/recent')` and `fetch('/api/users/online')`
+
+### 6.2 Client Components Interaction Pattern
+- **Real-time updates**: Socket.io for live messaging and presence
+- **User actions**: fetch() calls to API routes for CRUD operations
+- **Optimistic updates**: Update UI immediately, sync with server
+
+### 6.3 Authentication Flow
+1. User clicks "Sign in with Google" (Client Component)
+2. NextAuth v5 handles OAuth flow
+3. User profile created/updated via API route
+4. Session stored and user redirected to dashboard
+5. Server components fetch user data using session
+
+## 7. Real-time Features
+
+### 7.1 Socket.io Events
+- `user_online` - User comes online
+- `user_offline` - User goes offline
+- `typing_start` - User starts typing
+- `typing_stop` - User stops typing
+- `message_sent` - New message sent
+- `message_read` - Message marked as read
+- `friend_request` - New friend request
+- `call_initiate` - Video call started
+- `call_answer` - Call answered
+- `call_decline` - Call declined
+- `call_end` - Call ended
+
+### 7.2 WebRTC Integration
+- Peer-to-peer video/audio connections
+- Socket.io for signaling server
+- STUN/TURN servers for NAT traversal
+- Call state management through API routes
+
+## 8. User Interface Design
+
+### 8.1 Design System
+- **Framework**: Tailwind CSS 4.1 with shadcn/ui components
+- **Theme**: Dark/light mode support with CSS variables
+- **Typography**: Clean, readable fonts optimized for messaging
+- **Icons**: Lucide React icons for consistency
+- **Notifications**: Sonner for modern toast notifications
+
+### 8.2 Key Pages
+- **Login Page**: Google OAuth button with app branding
+- **Dashboard**: Recent chats, online friends, quick stats
+- **Friends Page**: Friend list, requests, add friend form
+- **Chat Page**: Message history, input field, video call button
+- **Settings Page**: Profile settings, privacy options
+
+### 8.3 Responsive Design
+- **Mobile** (320px-768px): Single-column layout, drawer navigation
+- **Tablet** (768px-1024px): Two-column layout with sidebar
+- **Desktop** (1024px+): Three-column layout with full sidebar
+
+## 9. Performance & Security
+
+### 9.1 Performance Optimizations
+- **Server Components**: Data fetching on server for faster initial load
+- **Streaming**: Progressive loading with Suspense boundaries
+- **Caching**: Next.js 15 automatic caching for API routes
+- **Image Optimization**: Next.js Image component for profile pictures
+
+### 9.2 Security Measures
+- **Authentication**: NextAuth v5 with secure JWT tokens
+- **Authorization**: Protected API routes and pages
+- **Input Validation**: Server-side validation for all inputs
+- **Rate Limiting**: API rate limiting to prevent abuse
+- **CORS**: Configured for production deployment
+
+## 10. Development Phases
+
+### Phase 1: MVP (4-6 weeks)
+- [ ] Next.js 15 project setup with Tailwind CSS 4.1
+- [ ] NextAuth v5 Google OAuth authentication
+- [ ] MongoDB models and connection
+- [ ] Basic friend system (search, add, accept/decline)
+- [ ] Real-time text messaging with Socket.io
+- [ ] Server components for data fetching
+- [ ] Responsive UI with shadcn/ui components
+
+### Phase 2: Enhanced Features (3-4 weeks)
+- [ ] Video calling functionality with WebRTC
+- [ ] Online status indicators
+- [ ] Message history and pagination
+- [ ] Typing indicators and read receipts
+- [ ] Push notifications with Sonner
+- [ ] Mobile optimization and PWA features
+
+### Phase 3: Polish & Deployment (2-3 weeks)
+- [ ] Error boundaries and loading states
+- [ ] Performance optimization and caching
+- [ ] Security hardening and testing
+- [ ] Production deployment on Vercel
+- [ ] Monitoring and analytics setup
+
+## 11. Success Metrics
+
+### 11.1 Technical Metrics
+- Page load time < 2 seconds
+- API response time < 200ms
+- 99.9% uptime
+- Real-time message delivery < 100ms
+
+### 11.2 User Metrics
+- User registration and retention rates
+- Daily/monthly active users
+- Average session duration
+- Video call success rates
+- Friend connection rates
+
+## 12. Deployment & Infrastructure
+
+### 12.1 Hosting
+- **Frontend & Backend**: Vercel (optimized for Next.js 15)
+- **Database**: MongoDB Atlas
+- **File Storage**: Cloudinary for profile images
+- **Domain**: Custom domain with SSL
+
+### 12.2 Environment Setup
+- **Development**: Local MongoDB, NextAuth development keys
+- **Staging**: MongoDB Atlas staging cluster, OAuth staging app
+- **Production**: MongoDB Atlas production cluster, OAuth production app
+
+---
+
+This PRD outlines a comprehensive chat and video calling application built with Next.js 15, featuring Google OAuth authentication, real-time messaging, video calling, and friend management. The application uses the latest Next.js features including server components, API routes, and optimized data fetching patterns for excellent performance and user experience.
