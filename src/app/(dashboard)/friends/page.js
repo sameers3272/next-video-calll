@@ -4,7 +4,10 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import FriendSearch from "@/components/friends/FriendSearch"
 import FriendRequestCard from "@/components/friends/FriendRequestCard"
+import FriendRequestDebug from "@/components/debug/FriendRequestDebug"
 import Link from "next/link"
+import connectToDatabase from "@/lib/mongodb"
+import Friendship from "@/models/Friendship"
 import { 
   MessageCircle, 
   Video, 
@@ -20,30 +23,59 @@ import {
 
 async function getFriends() {
   try {
-    const response = await fetch(`${process.env.NEXTAUTH_URL}/api/friends`, {
-      cache: 'no-store'
+    // Get session to use in direct database query instead of API call
+    const session = await auth()
+    if (!session) return []
+
+    await connectToDatabase()
+    
+    const friendships = await Friendship.find({
+      $or: [
+        { requester: session.user.id, status: 'accepted' },
+        { recipient: session.user.id, status: 'accepted' }
+      ]
+    }).populate('requester recipient')
+
+    const friends = friendships.map(friendship => {
+      const friend = friendship.requester._id.toString() === session.user.id
+        ? friendship.recipient
+        : friendship.requester
+      
+      return {
+        _id: friend._id,
+        name: friend.name,
+        email: friend.email,
+        profilePicture: friend.profilePicture,
+        isOnline: friend.isOnline,
+        lastSeen: friend.lastSeen
+      }
     })
-    if (response.ok) {
-      return await response.json()
-    }
+
+    return friends
   } catch (error) {
     console.error('Failed to fetch friends:', error)
+    return []
   }
-  return []
 }
 
 async function getFriendRequests() {
   try {
-    const response = await fetch(`${process.env.NEXTAUTH_URL}/api/friends/requests`, {
-      cache: 'no-store'
-    })
-    if (response.ok) {
-      return await response.json()
-    }
+    // Get session to use in direct database query instead of API call
+    const session = await auth()
+    if (!session) return []
+
+    await connectToDatabase()
+    
+    const friendRequests = await Friendship.find({
+      recipient: session.user.id,
+      status: 'pending'
+    }).populate('requester', 'name email profilePicture')
+
+    return friendRequests
   } catch (error) {
     console.error('Failed to fetch friend requests:', error)
+    return []
   }
-  return []
 }
 
 export default async function FriendsPage() {
@@ -68,6 +100,11 @@ export default async function FriendsPage() {
               <p className="text-gray-600 dark:text-gray-400 mt-1">
                 Manage your connections and discover new friends
               </p>
+              {process.env.NODE_ENV === 'development' && (
+                <p className="text-xs text-orange-600 dark:text-orange-400 mt-2">
+                  Debug: {friendRequests.length} pending requests found
+                </p>
+              )}
             </div>
           </div>
           <div className="flex items-center space-x-3">
@@ -136,6 +173,9 @@ export default async function FriendsPage() {
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-6">
         <div className="max-w-7xl mx-auto space-y-8">
+          {/* Debug Component - Remove in production */}
+          <FriendRequestDebug />
+
           {/* Friend Search */}
           <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-white/20 dark:border-gray-700/50 p-6">
             <div className="flex items-center space-x-3 mb-6">
