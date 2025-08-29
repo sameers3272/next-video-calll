@@ -4,7 +4,17 @@ import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Send, Phone, Video } from "lucide-react"
+import { 
+  Send, 
+  Phone, 
+  Video, 
+  MoreVertical, 
+  Smile, 
+  Paperclip,
+  Mic,
+  CheckCheck,
+  Check
+} from "lucide-react"
 import { useChat } from "@/hooks/useChat"
 import { useWebRTC } from "@/hooks/useWebRTC"
 import VideoCallModal from "@/components/video/VideoCallModal"
@@ -139,115 +149,222 @@ export default function ChatInterface({ friend, messages: initialMessages, curre
         localStream={localStream}
       />
       
-      <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="border-b p-4 flex items-center justify-between bg-card">
-        <div className="flex items-center space-x-3">
-          <Avatar>
-            <AvatarImage src={friend.profilePicture} />
-            <AvatarFallback>
-              {friend.name?.charAt(0) || 'U'}
-            </AvatarFallback>
-          </Avatar>
-          <div>
-            <h2 className="font-semibold">{friend.name}</h2>
-            <p className="text-sm text-muted-foreground">
-              {friend.isOnline ? 'Online' : 'Offline'}
-            </p>
+      <div className="flex flex-col h-full bg-gradient-to-b from-blue-50/20 to-purple-50/20 dark:from-gray-900/20 dark:to-gray-800/20">
+        {/* Chat Header */}
+        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-white/20 dark:border-gray-700/50 p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <Avatar className="h-12 w-12 ring-2 ring-white/50">
+                  <AvatarImage src={friend.profilePicture} />
+                  <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-500 text-white font-bold">
+                    {friend.name?.charAt(0) || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                {friend.isOnline && (
+                  <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></div>
+                )}
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white">{friend.name}</h2>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {friend.isOnline ? 'Active now' : `Last seen ${friend.lastSeen ? new Date(friend.lastSeen).toLocaleDateString() : 'recently'}`}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleAudioCall}
+                className="h-10 w-10 p-0 hover:bg-green-100 dark:hover:bg-green-900/20"
+              >
+                <Phone size={20} className="text-green-600" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleVideoCall}
+                className="h-10 w-10 p-0 hover:bg-blue-100 dark:hover:bg-blue-900/20"
+              >
+                <Video size={20} className="text-blue-600" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className="h-10 w-10 p-0"
+              >
+                <MoreVertical size={20} />
+              </Button>
+            </div>
           </div>
         </div>
-        <div className="flex space-x-2">
-          <Button variant="outline" size="sm" onClick={handleAudioCall}>
-            <Phone size={16} />
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleVideoCall}>
-            <Video size={16} />
-          </Button>
-        </div>
-      </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((message) => {
-          const isOwnMessage = message.sender._id === currentUserId
-          
-          return (
-            <div
-              key={message._id}
-              className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
-            >
-              <div className="flex items-end space-x-2 max-w-xs lg:max-w-md">
-                {!isOwnMessage && (
-                  <Avatar className="w-6 h-6">
-                    <AvatarImage src={message.sender.profilePicture} />
-                    <AvatarFallback className="text-xs">
-                      {message.sender.name?.charAt(0) || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                )}
+        {/* Messages Container */}
+        <div className="flex-1 overflow-y-auto px-4 py-6">
+          <div className="max-w-4xl mx-auto space-y-4">
+            {messages.map((message, index) => {
+              const isOwnMessage = message.sender._id === currentUserId
+              const showAvatar = !isOwnMessage && (index === 0 || messages[index - 1]?.sender._id !== message.sender._id)
+              const nextIsSameUser = index < messages.length - 1 && messages[index + 1]?.sender._id === message.sender._id
+              
+              return (
                 <div
-                  className={`px-3 py-2 rounded-lg ${
-                    isOwnMessage
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted'
+                  key={message._id}
+                  className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} ${
+                    nextIsSameUser ? 'mb-1' : 'mb-4'
                   }`}
                 >
-                  <p className="text-sm">{message.message}</p>
-                  <p className="text-xs opacity-70 mt-1">
-                    {new Date(message.createdAt).toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )
-        })}
-        {isTyping && (
-          <div className="flex justify-start">
-            <div className="flex items-end space-x-2">
-              <Avatar className="w-6 h-6">
-                <AvatarImage src={friend.profilePicture} />
-                <AvatarFallback className="text-xs">
-                  {friend.name?.charAt(0) || 'U'}
-                </AvatarFallback>
-              </Avatar>
-              <div className="bg-muted px-3 py-2 rounded-lg">
-                <div className="flex space-x-1">
-                  <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                  <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
+                  <div className={`flex items-end max-w-xs md:max-w-md lg:max-w-lg ${isOwnMessage ? 'flex-row-reverse' : 'flex-row'}`}>
+                    {/* Avatar */}
+                    {showAvatar && !isOwnMessage && (
+                      <div className="mb-1 mr-2">
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={message.sender.profilePicture} />
+                          <AvatarFallback className="bg-gradient-to-r from-gray-400 to-gray-500 text-white text-xs">
+                            {message.sender.name?.charAt(0) || 'U'}
+                          </AvatarFallback>
+                        </Avatar>
+                      </div>
+                    )}
+                    {!showAvatar && !isOwnMessage && <div className="w-10" />}
 
-      {/* Message Input */}
-      <div className="border-t p-4 bg-card">
-        <form onSubmit={handleSendMessage} className="flex space-x-2">
-          <Input
-            value={newMessage}
-            onChange={handleInputChange}
-            placeholder="Type a message..."
-            disabled={isLoading}
-            className="flex-1"
-          />
-          <Button type="submit" disabled={isLoading || !newMessage.trim()}>
-            <Send size={16} />
-          </Button>
-        </form>
-        
-        {!isConnected && (
-          <p className="text-xs text-muted-foreground mt-2">
-            Connecting to chat...
-          </p>
-        )}
+                    {/* Message Bubble */}
+                    <div className={`relative group ${isOwnMessage ? 'ml-2' : 'mr-2'}`}>
+                      {/* Sender name for received messages */}
+                      {showAvatar && !isOwnMessage && (
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1 px-3">
+                          {message.sender.name}
+                        </p>
+                      )}
+                      
+                      {/* Message bubble */}
+                      <div
+                        className={`px-4 py-3 rounded-3xl shadow-sm ${
+                          isOwnMessage
+                            ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-br-lg'
+                            : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-bl-lg border border-gray-200 dark:border-gray-600'
+                        }`}
+                      >
+                        <p className="text-sm leading-relaxed break-words">{message.message}</p>
+                        
+                        {/* Message info */}
+                        <div className={`flex items-center justify-end mt-2 space-x-1 ${
+                          isOwnMessage ? 'text-blue-100' : 'text-gray-500 dark:text-gray-400'
+                        }`}>
+                          <span className="text-xs">
+                            {new Date(message.createdAt).toLocaleTimeString([], {
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </span>
+                          {isOwnMessage && (
+                            <div>
+                              {message.isRead ? (
+                                <CheckCheck size={14} className="text-blue-200" />
+                              ) : (
+                                <Check size={14} className="text-blue-300" />
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+            
+            {/* Typing indicator */}
+            {isTyping && (
+              <div className="flex justify-start mb-4">
+                <div className="flex items-end">
+                  <Avatar className="h-8 w-8 mr-2">
+                    <AvatarImage src={friend.profilePicture} />
+                    <AvatarFallback className="bg-gradient-to-r from-gray-400 to-gray-500 text-white text-xs">
+                      {friend.name?.charAt(0) || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="bg-white dark:bg-gray-700 px-4 py-3 rounded-3xl rounded-bl-lg border border-gray-200 dark:border-gray-600 shadow-sm">
+                    <div className="flex space-x-1">
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+        </div>
+
+        {/* Message Input */}
+        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-t border-white/20 dark:border-gray-700/50 p-4">
+          {!isConnected && (
+            <div className="mb-3 text-center">
+              <span className="text-xs text-orange-500 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/50 px-3 py-1 rounded-full">
+                Connecting to chat...
+              </span>
+            </div>
+          )}
+          
+          <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto">
+            <div className="flex items-end space-x-3">
+              {/* Attachment button */}
+              <Button 
+                type="button"
+                variant="ghost" 
+                size="sm"
+                className="h-12 w-12 p-0 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+              >
+                <Paperclip size={20} className="text-gray-500" />
+              </Button>
+
+              {/* Message input container */}
+              <div className="flex-1 relative">
+                <div className="flex items-center bg-white dark:bg-gray-700 rounded-3xl border border-gray-200 dark:border-gray-600 shadow-sm">
+                  <Input
+                    value={newMessage}
+                    onChange={handleInputChange}
+                    placeholder="Type a message..."
+                    disabled={isLoading}
+                    className="flex-1 border-0 rounded-3xl bg-transparent px-4 py-3 focus-visible:ring-0 text-sm"
+                  />
+                  <Button 
+                    type="button"
+                    variant="ghost" 
+                    size="sm"
+                    className="h-10 w-10 p-0 mr-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-600"
+                  >
+                    <Smile size={18} className="text-gray-500" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Send/Voice button */}
+              {newMessage.trim() ? (
+                <Button 
+                  type="submit" 
+                  disabled={isLoading}
+                  className="h-12 w-12 p-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 shadow-lg"
+                >
+                  <Send size={18} />
+                </Button>
+              ) : (
+                <Button 
+                  type="button"
+                  variant="ghost" 
+                  size="sm"
+                  className="h-12 w-12 p-0 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  <Mic size={20} className="text-gray-500" />
+                </Button>
+              )}
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
     </>
   )
 }

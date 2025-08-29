@@ -34,7 +34,7 @@ This guide covers deploying your video chat application to production.
    - Navigate to your OAuth credentials
    - Add authorized redirect URIs:
      ```
-     https://your-app.vercel.app/api/auth/callback/google
+     https://next-video-call-mu.vercel.app/api/auth/callback/google
      https://yourdomain.com/api/auth/callback/google
      ```
 

@@ -1,0 +1,3 @@
+is this application complete as pe the PRD.txt ? if not then complete all the functionallities 1) UI is not        │
+│   looking good use shadcn for UI and make the UI/UX better as a chating and video-call app 2) use api folder         │
+│   structure backend and in frontend use fetch in server components to call the api's
