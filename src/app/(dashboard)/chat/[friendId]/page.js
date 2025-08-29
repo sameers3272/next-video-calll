@@ -1,33 +1,58 @@
 import { auth } from "@/lib/auth"
 import { notFound } from "next/navigation"
 import ChatInterface from "@/components/chat/ChatInterface"
+import connectToDatabase from "@/lib/mongodb"
+import User from "@/models/User"
+import Message from "@/models/Message"
 
 async function getUser(userId) {
   try {
-    const response = await fetch(`${process.env.NEXTAUTH_URL}/api/users/${userId}`, {
-      cache: 'no-store'
-    })
-    if (response.ok) {
-      return await response.json()
-    }
+    await connectToDatabase()
+    const user = await User.findById(userId).select('-googleId')
+    return user
   } catch (error) {
     console.error('Failed to fetch user:', error)
+    return null
   }
-  return null
 }
 
-async function getMessages(chatId) {
+async function getMessages(chatId, currentUserId) {
   try {
-    const response = await fetch(`${process.env.NEXTAUTH_URL}/api/messages/chat/${chatId}`, {
-      cache: 'no-store'
-    })
-    if (response.ok) {
-      return await response.json()
+    await connectToDatabase()
+    
+    // Verify the user is part of this chat
+    const chatParticipants = chatId.split('_')
+    if (!chatParticipants.includes(currentUserId)) {
+      return []
     }
+
+    const messages = await Message.find({
+      chatId: chatId,
+      isDeleted: false
+    })
+    .populate('sender', 'name email profilePicture')
+    .populate('recipient', 'name email profilePicture')
+    .sort({ createdAt: 1 }) // Oldest first for chat display
+    .limit(50)
+
+    // Mark messages as read for the current user
+    await Message.updateMany(
+      {
+        chatId: chatId,
+        recipient: currentUserId,
+        isRead: false
+      },
+      {
+        isRead: true,
+        readAt: new Date()
+      }
+    )
+
+    return messages
   } catch (error) {
     console.error('Failed to fetch messages:', error)
+    return []
   }
-  return []
 }
 
 export default async function ChatWithFriendPage({ params }) {
@@ -40,7 +65,7 @@ export default async function ChatWithFriendPage({ params }) {
   }
   
   const chatId = [session.user.id, friendId].sort().join('_')
-  const messages = await getMessages(chatId)
+  const messages = await getMessages(chatId, session.user.id)
 
   return (
     <div className="flex flex-col h-screen">

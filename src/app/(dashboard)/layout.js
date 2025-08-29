@@ -3,6 +3,7 @@ import { auth, signOut } from "@/lib/auth"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import MobileSidebar from "@/components/layout/MobileSidebar"
+import OnlineStatusProvider from "@/components/layout/OnlineStatusProvider"
 import Link from "next/link"
 import { MessageCircle, Users, Settings, Phone } from "lucide-react"
 
@@ -14,10 +15,11 @@ export default async function DashboardLayout({ children }) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-slate-900">
-      <div className="flex h-screen">
-        {/* Desktop Navigation Sidebar */}
-        <div className="hidden md:flex md:w-80 bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl border-r border-white/20 dark:border-gray-700/50 flex-col">
+    <OnlineStatusProvider>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-slate-900">
+        <div className="flex h-screen">
+          {/* Desktop Navigation Sidebar */}
+          <div className="hidden md:flex md:w-80 bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl border-r border-white/20 dark:border-gray-700/50 flex-col">
           {/* User Header */}
           <div className="p-6 border-b border-white/20 dark:border-gray-700/50">
             <div className="flex items-center gap-4">
@@ -105,8 +107,9 @@ export default async function DashboardLayout({ children }) {
           <main className="flex-1 overflow-auto bg-white/30 dark:bg-gray-800/30 backdrop-blur-sm">
             {children}
           </main>
+          </div>
         </div>
       </div>
-    </div>
+    </OnlineStatusProvider>
   )
 }

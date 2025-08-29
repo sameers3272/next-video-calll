@@ -2,27 +2,84 @@ import { auth } from "@/lib/auth"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import Link from "next/link"
+import connectToDatabase from "@/lib/mongodb"
+import Message from "@/models/Message"
+import User from "@/models/User"
 
-async function getRecentChats(userId) {
+async function getRecentChats() {
   try {
-    const response = await fetch(`${process.env.NEXTAUTH_URL}/api/messages/recent`, {
-      cache: 'no-store',
-      headers: {
-        'user-id': userId
+    const session = await auth()
+    if (!session) return []
+
+    await connectToDatabase()
+
+    // Get all messages where current user is sender or recipient
+    const recentMessages = await Message.aggregate([
+      {
+        $match: {
+          $or: [
+            { sender: session.user.id },
+            { recipient: session.user.id }
+          ],
+          isDeleted: false
+        }
+      },
+      {
+        $sort: { createdAt: -1 }
+      },
+      {
+        $group: {
+          _id: "$chatId",
+          lastMessage: { $first: "$$ROOT" }
+        }
+      },
+      {
+        $limit: 20
       }
-    })
-    if (response.ok) {
-      return await response.json()
-    }
+    ])
+
+    // Populate the messages with user data
+    const populatedChats = await Promise.all(
+      recentMessages.map(async (chat) => {
+        const message = await Message.findById(chat.lastMessage._id)
+          .populate('sender', 'name email profilePicture')
+          .populate('recipient', 'name email profilePicture')
+
+        const otherUserId = message.sender._id.toString() === session.user.id 
+          ? message.recipient._id 
+          : message.sender._id
+          
+        const otherUser = message.sender._id.toString() === session.user.id 
+          ? message.recipient 
+          : message.sender
+
+        // Count unread messages
+        const unreadCount = await Message.countDocuments({
+          chatId: chat._id,
+          recipient: session.user.id,
+          isRead: false
+        })
+
+        return {
+          _id: chat._id,
+          otherUserId: otherUserId.toString(),
+          otherUser,
+          lastMessage: message,
+          unreadCount
+        }
+      })
+    )
+
+    return populatedChats
   } catch (error) {
     console.error('Failed to fetch recent chats:', error)
+    return []
   }
-  return []
 }
 
 export default async function ChatPage() {
   const session = await auth()
-  const recentChats = await getRecentChats(session.user.id)
+  const recentChats = await getRecentChats()
 
   return (
     <div className="p-6">
