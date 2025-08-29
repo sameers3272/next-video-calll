@@ -18,13 +18,10 @@ import {
   UserCheck
 } from "lucide-react"
 
-async function getFriends(userId) {
+async function getFriends() {
   try {
     const response = await fetch(`${process.env.NEXTAUTH_URL}/api/friends`, {
-      cache: 'no-store',
-      headers: {
-        'user-id': userId
-      }
+      cache: 'no-store'
     })
     if (response.ok) {
       return await response.json()
@@ -35,13 +32,10 @@ async function getFriends(userId) {
   return []
 }
 
-async function getFriendRequests(userId) {
+async function getFriendRequests() {
   try {
     const response = await fetch(`${process.env.NEXTAUTH_URL}/api/friends/requests`, {
-      cache: 'no-store',
-      headers: {
-        'user-id': userId
-      }
+      cache: 'no-store'
     })
     if (response.ok) {
       return await response.json()
@@ -54,8 +48,8 @@ async function getFriendRequests(userId) {
 
 export default async function FriendsPage() {
   const session = await auth()
-  const friends = await getFriends(session.user.id)
-  const friendRequests = await getFriendRequests(session.user.id)
+  const friends = await getFriends()
+  const friendRequests = await getFriendRequests()
 
   const onlineFriends = friends.filter(friend => friend.isOnline)
   const offlineFriends = friends.filter(friend => !friend.isOnline)
