@@ -68,7 +68,7 @@ export default function LoginPage() {
 
         {/* Right side - Login Card */}
         <div className="flex items-center justify-center">
-          <Card className="w-full max-w-md shadow-2xl border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
+          <Card className="w-full max-w-lg lg:max-w-xl shadow-2xl border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
             <CardHeader className="text-center pb-8">
               <div className="mx-auto bg-gradient-to-r from-blue-600 to-purple-600 p-4 rounded-2xl w-fit mb-4">
                 <MessageCircle className="h-8 w-8 text-white" />

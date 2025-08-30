@@ -33,7 +33,8 @@ export default function ChatInterface({ friend, messages: initialMessages, curre
     isConnected, 
     sendMessage, 
     startTyping, 
-    stopTyping 
+    stopTyping,
+    socket
   } = useChat(currentUserId, chatId)
 
   // Use WebRTC hook for video calls
@@ -55,6 +56,27 @@ export default function ChatInterface({ friend, messages: initialMessages, curre
   useEffect(() => {
     setMessages(initialMessages)
   }, [initialMessages, setMessages])
+
+  // Listen for real-time messages from Socket.io
+  useEffect(() => {
+    if (!socket) return
+
+    const handleNewMessage = (message) => {
+      console.log('Received real-time message:', message)
+      setMessages(prev => {
+        // Check if message already exists to avoid duplicates
+        const exists = prev.find(msg => msg._id === message._id)
+        if (exists) return prev
+        return [...prev, message]
+      })
+    }
+
+    socket.on('new_message', handleNewMessage)
+
+    return () => {
+      socket.off('new_message', handleNewMessage)
+    }
+  }, [socket, setMessages])
 
   const isTyping = typingUsers.size > 0
 
@@ -91,8 +113,9 @@ export default function ChatInterface({ friend, messages: initialMessages, curre
 
       if (response.ok) {
         const newMsg = await response.json()
+        // Add message locally for immediate feedback
         setMessages(prev => [...prev, newMsg])
-        // Send via socket for real-time update
+        // Send via socket for real-time update to other users
         sendMessage(newMsg)
       } else {
         console.error('Failed to send message')

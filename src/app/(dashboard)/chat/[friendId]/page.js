@@ -19,7 +19,7 @@ async function getUser(userId) {
 async function getMessages(chatId, currentUserId) {
   try {
     await connectToDatabase()
-    
+
     // Verify the user is part of this chat
     const chatParticipants = chatId.split('_')
     if (!chatParticipants.includes(currentUserId)) {
@@ -30,10 +30,10 @@ async function getMessages(chatId, currentUserId) {
       chatId: chatId,
       isDeleted: false
     })
-    .populate('sender', 'name email profilePicture')
-    .populate('recipient', 'name email profilePicture')
-    .sort({ createdAt: 1 }) // Oldest first for chat display
-    .limit(50)
+      .populate('sender', 'name email profilePicture')
+      .populate('recipient', 'name email profilePicture')
+      .sort({ createdAt: 1 }) // Oldest first for chat display
+      .limit(50)
 
     // Mark messages as read for the current user
     await Message.updateMany(
@@ -47,7 +47,7 @@ async function getMessages(chatId, currentUserId) {
         readAt: new Date()
       }
     )
-
+    
     return messages
   } catch (error) {
     console.error('Failed to fetch messages:', error)
@@ -58,12 +58,12 @@ async function getMessages(chatId, currentUserId) {
 export default async function ChatWithFriendPage({ params }) {
   const session = await auth()
   const friendId = params.friendId
-  
+
   const friend = await getUser(friendId)
   if (!friend) {
     notFound()
   }
-  
+
   const chatId = [session.user.id, friendId].sort().join('_')
   const messages = await getMessages(chatId, session.user.id)
 
