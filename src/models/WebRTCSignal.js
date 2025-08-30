@@ -29,6 +29,5 @@ const WebRTCSignalSchema = new mongoose.Schema({
 
 // Index for efficient querying
 WebRTCSignalSchema.index({ recipientId: 1, createdAt: 1 })
-WebRTCSignalSchema.index({ createdAt: 1 }, { expireAfterSeconds: 300 })
 
 export default mongoose.models.WebRTCSignal || mongoose.model('WebRTCSignal', WebRTCSignalSchema)

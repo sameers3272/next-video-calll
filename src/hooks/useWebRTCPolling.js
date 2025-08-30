@@ -62,68 +62,66 @@ export function useWebRTCPolling(userId) {
         const signals = await response.json()
         lastSignalCheck.current = new Date()
         
+        // Handle signals inline to avoid circular dependency
         for (const signal of signals) {
-          await handleSignal(signal)
+          const { type, data, senderId } = signal
+
+          switch (type) {
+            case 'offer':
+              if (callStatus === 'idle') {
+                setCurrentCall({ 
+                  otherUserId: senderId._id, 
+                  otherUser: senderId, 
+                  offer: data 
+                })
+                setCallStatus('ringing')
+              }
+              break
+
+            case 'answer':
+              if (peerConnection.current && callStatus === 'calling') {
+                try {
+                  await peerConnection.current.setRemoteDescription(new RTCSessionDescription(data))
+                  setCallStatus('connected')
+                } catch (error) {
+                  console.error('Error setting remote description:', error)
+                }
+              }
+              break
+
+            case 'ice-candidate':
+              if (peerConnection.current) {
+                try {
+                  await peerConnection.current.addIceCandidate(new RTCIceCandidate(data))
+                } catch (error) {
+                  console.error('Error adding ICE candidate:', error)
+                }
+              }
+              break
+
+            case 'call-end':
+            case 'call-decline':
+              endCall()
+              break
+          }
         }
       }
     } catch (error) {
       console.error('Error polling WebRTC signals:', error)
     }
-  }, [userId, handleSignal])
-
-  // Handle incoming WebRTC signals
-  const handleSignal = useCallback(async (signal) => {
-    const { type, data, senderId } = signal
-
-    switch (type) {
-      case 'offer':
-        if (callStatus === 'idle') {
-          // Incoming call
-          setCurrentCall({ 
-            otherUserId: senderId._id, 
-            otherUser: senderId, 
-            offer: data 
-          })
-          setCallStatus('ringing')
-        }
-        break
-
-      case 'answer':
-        if (peerConnection.current && callStatus === 'calling') {
-          try {
-            await peerConnection.current.setRemoteDescription(new RTCSessionDescription(data))
-            setCallStatus('connected')
-          } catch (error) {
-            console.error('Error setting remote description:', error)
-          }
-        }
-        break
-
-      case 'ice-candidate':
-        if (peerConnection.current) {
-          try {
-            await peerConnection.current.addIceCandidate(new RTCIceCandidate(data))
-          } catch (error) {
-            console.error('Error adding ICE candidate:', error)
-          }
-        }
-        break
-
-      case 'call-end':
-      case 'call-decline':
-        endCall()
-        break
-    }
-  }, [callStatus])
+  }, [userId, callStatus, endCall])
 
   // Start polling when needed
   useEffect(() => {
+    // Only start polling if we have a valid userId
+    if (!userId) return
+
     if (isInCall || callStatus !== 'idle') {
       // Poll more frequently during calls
       pollingInterval.current = setInterval(pollSignals, 1000)
     } else {
       // Poll less frequently when idle
-      pollingInterval.current = setInterval(pollSignals, 3000)
+      pollingInterval.current = setInterval(pollSignals, 5000)
     }
 
     return () => {
@@ -131,7 +129,7 @@ export function useWebRTCPolling(userId) {
         clearInterval(pollingInterval.current)
       }
     }
-  }, [isInCall, callStatus, pollSignals])
+  }, [userId, isInCall, callStatus, pollSignals])
 
   // End call function (defined early to avoid dependency issues)
   const endCall = useCallback(() => {
