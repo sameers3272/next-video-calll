@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import FriendSearch from "@/components/friends/FriendSearch"
 import FriendRequestCard from "@/components/friends/FriendRequestCard"
-import FriendRequestDebug from "@/components/debug/FriendRequestDebug"
 import Link from "next/link"
 import connectToDatabase from "@/lib/mongodb"
 import Friendship from "@/models/Friendship"
@@ -100,11 +99,6 @@ export default async function FriendsPage() {
               <p className="text-gray-600 dark:text-gray-400 mt-1">
                 Manage your connections and discover new friends
               </p>
-              {process.env.NODE_ENV === 'development' && (
-                <p className="text-xs text-orange-600 dark:text-orange-400 mt-2">
-                  Debug: {friendRequests.length} pending requests found
-                </p>
-              )}
             </div>
           </div>
           <div className="flex items-center space-x-3">
@@ -118,63 +112,11 @@ export default async function FriendsPage() {
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
-          <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 dark:from-blue-500/20 dark:to-cyan-500/20 p-4 rounded-2xl border border-blue-200/50 dark:border-blue-700/50">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 rounded-xl bg-blue-500">
-                <Users size={20} className="text-white" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">{friends.length}</p>
-                <p className="text-sm text-blue-600 dark:text-blue-400">Total Friends</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 dark:from-green-500/20 dark:to-emerald-500/20 p-4 rounded-2xl border border-green-200/50 dark:border-green-700/50">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 rounded-xl bg-green-500">
-                <div className="w-5 h-5 bg-white rounded-full" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-green-700 dark:text-green-300">{onlineFriends.length}</p>
-                <p className="text-sm text-green-600 dark:text-green-400">Online Now</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 dark:from-purple-500/20 dark:to-pink-500/20 p-4 rounded-2xl border border-purple-200/50 dark:border-purple-700/50">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 rounded-xl bg-purple-500">
-                <UserPlus size={20} className="text-white" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">{friendRequests.length}</p>
-                <p className="text-sm text-purple-600 dark:text-purple-400">Requests</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-r from-orange-500/10 to-red-500/10 dark:from-orange-500/20 dark:to-red-500/20 p-4 rounded-2xl border border-orange-200/50 dark:border-orange-700/50">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 rounded-xl bg-orange-500">
-                <MessageCircle size={20} className="text-white" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-orange-700 dark:text-orange-300">0</p>
-                <p className="text-sm text-orange-600 dark:text-orange-400">Blocked</p>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-6">
         <div className="max-w-7xl mx-auto space-y-8">
-          {/* Debug Component - Remove in production */}
-          <FriendRequestDebug />
 
           {/* Friend Search */}
           <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-white/20 dark:border-gray-700/50 p-6">

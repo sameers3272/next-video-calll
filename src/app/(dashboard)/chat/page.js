@@ -5,6 +5,7 @@ import Link from "next/link"
 import connectToDatabase from "@/lib/mongodb"
 import Message from "@/models/Message"
 import User from "@/models/User"
+import mongoose from "mongoose"
 
 async function getRecentChats() {
   try {
@@ -13,13 +14,16 @@ async function getRecentChats() {
 
     await connectToDatabase()
 
+    // Convert user ID to ObjectId
+    const userId = new mongoose.Types.ObjectId(session.user.id)
+
     // Get all messages where current user is sender or recipient
     const recentMessages = await Message.aggregate([
       {
         $match: {
           $or: [
-            { sender: session.user.id },
-            { recipient: session.user.id }
+            { sender: userId },
+            { recipient: userId }
           ],
           isDeleted: false
         }
@@ -56,7 +60,7 @@ async function getRecentChats() {
         // Count unread messages
         const unreadCount = await Message.countDocuments({
           chatId: chat._id,
-          recipient: session.user.id,
+          recipient: userId,
           isRead: false
         })
 

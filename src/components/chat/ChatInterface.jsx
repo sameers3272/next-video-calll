@@ -18,6 +18,7 @@ import {
 import { useChat } from "@/hooks/useChat"
 import { usePollingChat } from "@/hooks/usePollingChat"
 import { useWebRTC } from "@/hooks/useWebRTC"
+import { useWebRTCPolling } from "@/hooks/useWebRTCPolling"
 import VideoCallModal from "@/components/video/VideoCallModal"
 
 export default function ChatInterface({ friend, messages: initialMessages, currentUserId, chatId }) {
@@ -44,7 +45,10 @@ export default function ChatInterface({ friend, messages: initialMessages, curre
     socket
   } = isVercelCompatible ? pollingChat : socketChat
 
-  // Use WebRTC hook for video calls
+  // Use appropriate WebRTC hook based on environment
+  const socketWebRTC = useWebRTC(currentUserId)
+  const pollingWebRTC = useWebRTCPolling(currentUserId)
+  
   const {
     localStream,
     remoteStream,
@@ -57,7 +61,7 @@ export default function ChatInterface({ friend, messages: initialMessages, curre
     answerCall,
     declineCall,
     endCall
-  } = useWebRTC(currentUserId)
+  } = isVercelCompatible ? pollingWebRTC : socketWebRTC
 
   // Initialize messages
   useEffect(() => {
@@ -122,8 +126,10 @@ export default function ChatInterface({ friend, messages: initialMessages, curre
         const newMsg = await response.json()
         // Add message locally for immediate feedback
         setMessages(prev => [...prev, newMsg])
-        // Send via socket for real-time update to other users
-        sendMessage(newMsg)
+        // Send via socket for real-time update to other users (only if using Socket.io)
+        if (sendMessageHook) {
+          sendMessageHook(newMsg)
+        }
       } else {
         console.error('Failed to send message')
         setNewMessage(messageText) // Restore the message if failed
