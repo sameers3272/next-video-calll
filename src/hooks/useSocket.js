@@ -8,6 +8,10 @@ export function useSocket(userId) {
 
   useEffect(() => {
     if (!userId) return
+    
+    // Don't initialize Socket.io in Vercel/production mode when Socket.io is disabled
+    const isVercelCompatible = process.env.NODE_ENV === 'production' || !process.env.SOCKET_IO_ENABLED
+    if (isVercelCompatible) return
 
     // Initialize socket connection
     socket.current = io(process.env.NODE_ENV === 'production' 

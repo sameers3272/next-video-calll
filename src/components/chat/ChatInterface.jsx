@@ -30,38 +30,67 @@ export default function ChatInterface({ friend, messages: initialMessages, curre
   // Use polling chat for Vercel compatibility (fallback to Socket.io in development)
   const isVercelCompatible = process.env.NODE_ENV === 'production' || !process.env.SOCKET_IO_ENABLED
   
+  // Always call both hooks to avoid conditional hook calls
   const socketChat = useChat(currentUserId, chatId)
   const pollingChat = usePollingChat(currentUserId, chatId)
   
-  // Use polling chat in production (Vercel) or Socket.io in development
-  const { 
-    messages, 
-    setMessages, 
-    typingUsers, 
-    isConnected, 
-    sendMessage: sendMessageHook, 
-    startTyping, 
-    stopTyping,
-    socket
-  } = isVercelCompatible ? pollingChat : socketChat
-
-  // Use appropriate WebRTC hook based on environment
+  // For WebRTC, only use polling in Vercel mode, Socket.io in development
   const socketWebRTC = useWebRTC(currentUserId)
   const pollingWebRTC = useWebRTCPolling(currentUserId)
   
-  const {
-    localStream,
-    remoteStream,
-    isInCall,
-    callStatus,
-    currentCall,
-    localVideoRef,
-    remoteVideoRef,
-    startCall,
-    answerCall,
-    declineCall,
-    endCall
-  } = isVercelCompatible ? pollingWebRTC : socketWebRTC
+  // Use separate variables to avoid complex destructuring that might cause hoisting issues
+  let messages, setMessages, typingUsers, isConnected, sendMessageHook, startTyping, stopTyping, socket
+  let localStream, remoteStream, isInCall, callStatus, currentCall, localVideoRef, remoteVideoRef, startCall, answerCall, declineCall, endCall
+
+  if (isVercelCompatible) {
+    const chatSystem = pollingChat
+    const webrtcSystem = pollingWebRTC
+    
+    messages = chatSystem.messages
+    setMessages = chatSystem.setMessages
+    typingUsers = chatSystem.typingUsers
+    isConnected = chatSystem.isConnected
+    sendMessageHook = chatSystem.sendMessage
+    startTyping = chatSystem.startTyping
+    stopTyping = chatSystem.stopTyping
+    socket = chatSystem.socket
+    
+    localStream = webrtcSystem.localStream
+    remoteStream = webrtcSystem.remoteStream
+    isInCall = webrtcSystem.isInCall
+    callStatus = webrtcSystem.callStatus
+    currentCall = webrtcSystem.currentCall
+    localVideoRef = webrtcSystem.localVideoRef
+    remoteVideoRef = webrtcSystem.remoteVideoRef
+    startCall = webrtcSystem.startCall
+    answerCall = webrtcSystem.answerCall
+    declineCall = webrtcSystem.declineCall
+    endCall = webrtcSystem.endCall
+  } else {
+    const chatSystem = socketChat
+    const webrtcSystem = socketWebRTC
+    
+    messages = chatSystem.messages
+    setMessages = chatSystem.setMessages
+    typingUsers = chatSystem.typingUsers
+    isConnected = chatSystem.isConnected
+    sendMessageHook = chatSystem.sendMessage
+    startTyping = chatSystem.startTyping
+    stopTyping = chatSystem.stopTyping
+    socket = chatSystem.socket
+    
+    localStream = webrtcSystem.localStream
+    remoteStream = webrtcSystem.remoteStream
+    isInCall = webrtcSystem.isInCall
+    callStatus = webrtcSystem.callStatus
+    currentCall = webrtcSystem.currentCall
+    localVideoRef = webrtcSystem.localVideoRef
+    remoteVideoRef = webrtcSystem.remoteVideoRef
+    startCall = webrtcSystem.startCall
+    answerCall = webrtcSystem.answerCall
+    declineCall = webrtcSystem.declineCall
+    endCall = webrtcSystem.endCall
+  }
 
   // Initialize messages
   useEffect(() => {
