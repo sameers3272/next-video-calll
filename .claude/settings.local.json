@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(npm install:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(SOCKET_IO_ENABLED=false npm run build)",
+      "Bash(SOCKET_IO_ENABLED=false npm start)",
+      "Bash(taskkill:*)",
+      "Bash(set PORT=3001)"
     ],
     "deny": [],
     "ask": []

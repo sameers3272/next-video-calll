@@ -16,6 +16,7 @@ import {
   Check
 } from "lucide-react"
 import { useChat } from "@/hooks/useChat"
+import { usePollingChat } from "@/hooks/usePollingChat"
 import { useWebRTC } from "@/hooks/useWebRTC"
 import VideoCallModal from "@/components/video/VideoCallModal"
 
@@ -25,17 +26,23 @@ export default function ChatInterface({ friend, messages: initialMessages, curre
   const messagesEndRef = useRef(null)
   const typingTimeoutRef = useRef(null)
 
-  // Use real-time chat hook
+  // Use polling chat for Vercel compatibility (fallback to Socket.io in development)
+  const isVercelCompatible = process.env.NODE_ENV === 'production' || !process.env.SOCKET_IO_ENABLED
+  
+  const socketChat = useChat(currentUserId, chatId)
+  const pollingChat = usePollingChat(currentUserId, chatId)
+  
+  // Use polling chat in production (Vercel) or Socket.io in development
   const { 
     messages, 
     setMessages, 
     typingUsers, 
     isConnected, 
-    sendMessage, 
+    sendMessage: sendMessageHook, 
     startTyping, 
     stopTyping,
     socket
-  } = useChat(currentUserId, chatId)
+  } = isVercelCompatible ? pollingChat : socketChat
 
   // Use WebRTC hook for video calls
   const {
